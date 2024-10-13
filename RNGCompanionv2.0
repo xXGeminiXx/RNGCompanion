@@ -1,0 +1,106 @@
+;RNGCompanion v2.0
+;removed landmark functionality were going to use straight up macros instead of trying to identify any items in the game and repositioning. 
+
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+; Global variables
+global running := false
+global screenWidth := A_ScreenWidth
+global screenHeight := A_ScreenHeight
+global killSwitchHotkey := "F12"
+global startHotkey := "F10"
+global currentState := "Idle"  ; Initial state
+global spinDuration := 15000  ; Spin for 15 seconds
+global clickFrequency := 200  ; Click every 200ms (5 times per second)
+
+SetTitleMatchMode(2)  ; Match Roblox by partial title
+
+; Initialize the GUI
+guiWindow := Gui()
+guiWindow.Add("Text", "x10 y10 cBlack", "🐝 Bot Control Panel")
+
+; Define buttons explicitly and assign them to variables
+btnStartScript := guiWindow.Add("Button", "x20 y40 w150 h30 cYellow BackgroundBlack", "Start Script")
+btnStopScript := guiWindow.Add("Button", "x20 y80 w150 h30 cYellow BackgroundBlack", "Stop Script")
+
+; Define status text
+statusText := guiWindow.Add("Text", "x20 y120 w400 h30 cBlack", "🐝 Status: Ready")
+
+; Show the GUI
+guiWindow.Show("w400 h200")  ; Set window size
+guiWindow.Title := "🐝 Roblox AutoScript by BeeBrained"
+
+; Bind functions to button events
+btnStartScript.OnEvent("Click", StartScript)
+btnStopScript.OnEvent("Click", KillScript)
+
+; Set up hotkeys
+Hotkey(killSwitchHotkey, KillScript)
+Hotkey(startHotkey, StartScript)
+
+; Start the script
+StartScript(*) {
+    global running, currentState, statusText
+    running := true
+    currentState := "RightClickDrag"
+    btnStartScript.Disable()  ; Disable start button
+    SetTimer(MainLoop, 100)  ; Start the main loop
+    statusText.Value := "Script started! Press F12 to stop."
+}
+
+; Stop the script safely
+KillScript(*) {
+    global running, currentState, statusText
+    running := false
+    SetTimer(MainLoop, 0)  ; Stop the loop
+    btnStartScript.Enable()  ; Enable start button
+    currentState := "Idle"
+    statusText.Value := "Script stopped."
+}
+
+; Main loop controlling game states
+MainLoop(*) {
+    global running, currentState, screenWidth, screenHeight
+    if (!running)
+        return
+
+    ; Handle each game state with separate functions
+    if (currentState = "RightClickDrag") {
+        RightClickDrag()
+    } else if (currentState = "SpinAndClick") {
+        SpinAndClick()
+    }
+}
+
+; State: Right-click drag to adjust camera horizontally
+RightClickDrag() {
+    global currentState, screenWidth, screenHeight, statusText
+    statusText.Value := "Bot action: Right-click dragging"
+    
+    ; Drag the mouse to set the camera horizontal
+    MouseClickDrag("Right", screenWidth * 0.5, screenHeight * 0.25, screenWidth * 0.5, screenHeight * 0.75, 50)
+    Sleep(1000)  ; Give some time for the camera to adjust
+    
+    ; Transition to the next state: Spin and click
+    currentState := "SpinAndClick"
+}
+
+; State: Spin the camera and left-click periodically
+SpinAndClick() {
+    global spinDuration, clickFrequency, currentState, screenWidth, screenHeight, statusText
+    statusText.Value := "Bot action: Spinning and clicking"
+
+    startTime := A_TickCount
+    while (A_TickCount - startTime < spinDuration) {
+        ; Hold right-click and move the mouse in a circle
+        MouseClickDrag("Right", screenWidth * 0.5, screenHeight * 0.5, screenWidth * 0.75, screenHeight * 0.5, 50)
+        ; Left-click periodically
+        Click("Left")
+        Sleep(clickFrequency)
+    }
+    
+    ; After spinning and clicking, return to idle or repeat
+    currentState := "RightClickDrag"  ; Loop back to the first state
+}
+
