@@ -16,7 +16,7 @@ global startHotkey := "F10"
 
 ; Initialize the GUI
 guiWindow := Gui()
-guiWindow.Add("Text", "Define up to 5 Pixel Colors per Landmark (click to get colors)")
+guiWindow.Add("Text", "x10 y10", "Define up to 5 Pixel Colors per Landmark (click to get colors)")
 guiWindow.Add("Edit", "x200 y40 w100 vLandmarkX", 0.5)
 guiWindow.Add("Edit", "x310 y40 w100 vLandmarkY", 0.5)
 guiWindow.Add("Button", "x420 y40 w100 h30", "Add Landmark").OnEvent("Click", Func("AddLandmark"))
@@ -40,12 +40,12 @@ AddLandmark() {
 
     ; Initialize the landmark with 5 placeholder colors
     Loop 5 {
-        Push(landmark.colors, "Pick Color")
+        landmark.colors.Push("Pick Color")
     }
     
     ; Add the landmark to the ListView and global list
     lv.Add(A_Index, landmark.x, landmark.y, landmark.colors*)
-    Push(landmarks, landmark)
+    landmarks.Push(landmark)
     guiWindow["StatusText"].Value := "Landmark added!"
 }
 
@@ -59,7 +59,7 @@ PickColor() {
 
     MsgBox("Use the mouse to pick a pixel color on the game screen.")
     MouseGetPos(&xPos, &yPos)
-    PixelGetColor(&color, xPos, yPos, "RGB")
+    color := PixelGetColor(xPos, yPos)
     
     ; Assign the color to the first available slot in the selected landmark
     Loop 5 {
@@ -85,16 +85,16 @@ OnLandmarkSelect() {
 ; Start the script's main loop
 StartScript() {
     global running := true, guiWindow
-    GuiControlDisable("Start Script")
-    SetTimer(Func("MainLoop"), 100)
+    guiWindow["Start Script"].Disable()  ; Disable start button
+    SetTimer(Func("MainLoop"), 100)  ; Set up the main loop
     guiWindow["StatusText"].Value := "Script started! Press " killSwitchHotkey " to stop."
 }
 
 ; Stop the script safely
 KillScript() {
     global running := false, guiWindow
-    SetTimer(Func("MainLoop"), Off)
-    GuiControlEnable("Start Script")
+    SetTimer(Func("MainLoop"), 0)  ; Turn off the loop
+    guiWindow["Start Script"].Enable()  ; Enable start button
     guiWindow["StatusText"].Value := "Script stopped."
 }
 
@@ -118,7 +118,7 @@ MainLoop() {
         ; Check up to 5 colors per landmark for a match
         for color in landmark.colors {
             if (color != "Pick Color") {
-                PixelGetColor(&currentColor, absoluteX, absoluteY, "RGB")
+                currentColor := PixelGetColor(absoluteX, absoluteY)
                 if (CompareColors(currentColor, color, 15)) {
                     success := true
                     break
