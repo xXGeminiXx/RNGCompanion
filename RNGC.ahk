@@ -25,10 +25,11 @@ btnPickColor := guiWindow.Add("Button", "x20 y80 w150 h30", "Pick Color")
 btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30", "Start Script")
 btnStopScript := guiWindow.Add("Button", "x20 y160 w150 h30", "Stop Script")
 
-lv := guiWindow.Add("ListView", "r5 w400 h150", "Landmark #|X|Y|Color 1|Color 2|Color 3|Color 4|Color 5")
+lv := guiWindow.Add("ListView", ["r5 w400 h150", "Landmark #", "X", "Y", "Color 1", "Color 2", "Color 3", "Color 4", "Color 5"])
 guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText", "Status: Ready")
 
-guiWindow.Show("w600 h300", "AHK Roblox Automation")
+guiWindow.Show("w600 h300")  ; Set window size
+guiWindow.Title := "AHK Roblox Automation"  ; Set window title
 
 ; Bind functions to button events
 btnAddLandmark.OnEvent("Click", Func("AddLandmark"))
