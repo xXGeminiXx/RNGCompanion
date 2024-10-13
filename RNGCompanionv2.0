@@ -1,6 +1,3 @@
-;RNGCompanion v2.0
-;removed landmark functionality were going to use straight up macros instead of trying to identify any items in the game and repositioning. 
-
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
@@ -13,6 +10,7 @@ global startHotkey := "F10"
 global currentState := "Idle"  ; Initial state
 global spinDuration := 15000  ; Spin for 15 seconds
 global clickFrequency := 200  ; Click every 200ms (5 times per second)
+global robloxWindowTitle := "Roblox"  ; Adjust to the Roblox window title
 
 SetTitleMatchMode(2)  ; Match Roblox by partial title
 
@@ -41,20 +39,26 @@ Hotkey(startHotkey, StartScript)
 
 ; Start the script
 StartScript(*) {
-    global running, currentState, statusText
-    running := true
-    currentState := "RightClickDrag"
-    btnStartScript.Disable()  ; Disable start button
-    SetTimer(MainLoop, 100)  ; Start the main loop
-    statusText.Value := "Script started! Press F12 to stop."
+    global running, currentState, statusText, btnStartScript, btnStopScript
+    if WinActive(robloxWindowTitle) {
+        running := true
+        currentState := "RightClickDrag"
+        btnStartScript.Enabled := false  ; Disable start button
+        btnStopScript.Enabled := true  ; Enable stop button
+        SetTimer(MainLoop, 100)  ; Start the main loop
+        statusText.Value := "Script started! Press F12 to stop."
+    } else {
+        MsgBox("Roblox window is not active. Please make sure it's active and try again.")
+    }
 }
 
 ; Stop the script safely
 KillScript(*) {
-    global running, currentState, statusText
+    global running, currentState, statusText, btnStartScript, btnStopScript
     running := false
     SetTimer(MainLoop, 0)  ; Stop the loop
-    btnStartScript.Enable()  ; Enable start button
+    btnStartScript.Enabled := true  ; Enable start button
+    btnStopScript.Enabled := false  ; Disable stop button
     currentState := "Idle"
     statusText.Value := "Script stopped."
 }
@@ -62,8 +66,8 @@ KillScript(*) {
 ; Main loop controlling game states
 MainLoop(*) {
     global running, currentState, screenWidth, screenHeight
-    if (!running)
-        return
+    if (!running || !WinActive(robloxWindowTitle))
+        return  ; Stop the loop if the window is not active
 
     ; Handle each game state with separate functions
     if (currentState = "RightClickDrag") {
