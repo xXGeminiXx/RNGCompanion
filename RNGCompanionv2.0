@@ -66,8 +66,10 @@ KillScript(*) {
 ; Main loop controlling game states
 MainLoop(*) {
     global running, currentState, screenWidth, screenHeight
-    if (!running || !WinActive(robloxWindowTitle))
-        return  ; Stop the loop if the window is not active
+    if (!running || !WinActive(robloxWindowTitle)) {
+        KillScript()  ; Immediately stop if Roblox window is not active
+        return
+    }
 
     ; Handle each game state with separate functions
     if (currentState = "RightClickDrag") {
@@ -97,6 +99,10 @@ SpinAndClick() {
 
     startTime := A_TickCount
     while (A_TickCount - startTime < spinDuration) {
+        if !WinActive(robloxWindowTitle) {
+            KillScript()  ; Stop immediately if Roblox window is lost during spin
+            return
+        }
         ; Hold right-click and move the mouse in a circle
         MouseClickDrag("Right", screenWidth * 0.5, screenHeight * 0.5, screenWidth * 0.75, screenHeight * 0.5, 50)
         ; Left-click periodically
