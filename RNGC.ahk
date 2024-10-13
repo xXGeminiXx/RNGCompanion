@@ -20,6 +20,7 @@ guiWindow.Add("Text", "x10 y10", "Define up to 5 Pixel Colors per Landmark (clic
 guiWindow.Add("Edit", "x200 y40 w100 vLandmarkX", 0.5)
 guiWindow.Add("Edit", "x310 y40 w100 vLandmarkY", 0.5)
 
+; Define buttons explicitly
 btnAddLandmark := guiWindow.Add("Button", "x420 y40 w100 h30", "Add Landmark")
 btnPickColor := guiWindow.Add("Button", "x20 y80 w150 h30", "Pick Color")
 btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30", "Start Script")
@@ -33,7 +34,7 @@ guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText", "Status: Ready")
 guiWindow.Show("w600 h300")  ; Set window size
 guiWindow.Title := "AHK Roblox Automation"  ; Set window title
 
-; Bind functions to button events
+; Bind functions to button events (make sure they are bound after creating buttons)
 btnAddLandmark.OnEvent("Click", Func("AddLandmark"))
 btnPickColor.OnEvent("Click", Func("PickColor"))
 btnStartScript.OnEvent("Click", Func("StartScript"))
@@ -159,4 +160,3 @@ CompareColors(color1, color2, tolerance := 15) {
     r2 := (color2 >> 16) & 0xFF, g2 := (color2 >> 8) & 0xFF, b2 := color2 & 0xFF
     return Abs(r1 - r2) <= tolerance && Abs(g1 - g2) <= tolerance && Abs(b1 - b2) <= tolerance
 }
-
