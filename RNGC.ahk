@@ -11,8 +11,8 @@ global screenHeight := A_ScreenHeight
 global selectedLandmarkIndex := -1
 
 ; Define hotkeys for starting and stopping the script
-global killSwitchHotkey := "F12"
-global startHotkey := "F10"
+killSwitchHotkey := "F12"
+startHotkey := "F10"
 
 ; Initialize the GUI
 guiWindow := Gui()
@@ -25,7 +25,8 @@ btnPickColor := guiWindow.Add("Button", "x20 y80 w150 h30", "Pick Color")
 btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30", "Start Script")
 btnStopScript := guiWindow.Add("Button", "x20 y160 w150 h30", "Stop Script")
 
-lv := guiWindow.Add("ListView", ["r5 w400 h150", "Landmark #", "X", "Y", "Color 1", "Color 2", "Color 3", "Color 4", "Color 5"])
+; Use a string for ListView columns
+lv := guiWindow.Add("ListView", "r5 w400 h150", "Landmark #|X|Y|Color 1|Color 2|Color 3|Color 4|Color 5")
 guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText", "Status: Ready")
 
 guiWindow.Show("w600 h300")  ; Set window size
@@ -37,9 +38,9 @@ btnPickColor.OnEvent("Click", Func("PickColor"))
 btnStartScript.OnEvent("Click", Func("StartScript"))
 btnStopScript.OnEvent("Click", Func("KillScript"))
 
-; Hotkeys for starting and stopping
-Hotkey(killSwitchHotkey, Func("KillScript"))
-Hotkey(startHotkey, Func("StartScript"))
+; Set up hotkeys
+Hotkey("F12", Func("KillScript"))
+Hotkey("F10", Func("StartScript"))
 
 ; Add a new landmark
 AddLandmark() {
@@ -96,7 +97,7 @@ StartScript() {
     global running := true, guiWindow
     guiWindow["Start Script"].Disable()  ; Disable start button
     SetTimer(Func("MainLoop"), 100)  ; Set up the main loop
-    guiWindow["StatusText"].Value := "Script started! Press " killSwitchHotkey " to stop."
+    guiWindow["StatusText"].Value := "Script started! Press F12 to stop."
 }
 
 ; Stop the script safely
