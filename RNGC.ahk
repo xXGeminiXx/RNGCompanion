@@ -15,7 +15,7 @@ global killSwitchHotkey := "F12"
 global startHotkey := "F10"
 
 ; Initialize the GUI
-guiWindow := GuiCreate()
+guiWindow := Gui()
 guiWindow.Add("Text", "Define up to 5 Pixel Colors per Landmark (click to get colors)")
 guiWindow.Add("Edit", "x200 y40 w100 vLandmarkX", 0.5)
 guiWindow.Add("Edit", "x310 y40 w100 vLandmarkY", 0.5)
@@ -148,4 +148,3 @@ CompareColors(color1, color2, tolerance := 15) {
     r2 := (color2 >> 16) & 0xFF, g2 := (color2 >> 8) & 0xFF, b2 := color2 & 0xFF
     return Abs(r1 - r2) <= tolerance && Abs(g1 - g2) <= tolerance && Abs(b1 - b2) <= tolerance
 }
-
