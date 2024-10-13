@@ -25,10 +25,11 @@ btnPickColor := guiWindow.Add("Button", "x20 y80 w150 h30", "Pick Color")
 btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30", "Start Script")
 btnStopScript := guiWindow.Add("Button", "x20 y160 w150 h30", "Stop Script")
 
-; Use a string for ListView columns
-lv := guiWindow.Add("ListView", "r5 w400 h150", "Landmark #|X|Y|Color 1|Color 2|Color 3|Color 4|Color 5")
+; Use an array for ListView columns
+lv := guiWindow.Add("ListView", "r5 w400 h150", ["Landmark #", "X", "Y", "Color 1", "Color 2", "Color 3", "Color 4", "Color 5"])
 guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText", "Status: Ready")
 
+; Show the GUI
 guiWindow.Show("w600 h300")  ; Set window size
 guiWindow.Title := "AHK Roblox Automation"  ; Set window title
 
@@ -43,7 +44,7 @@ Hotkey("F12", Func("KillScript"))
 Hotkey("F10", Func("StartScript"))
 
 ; Add a new landmark
-AddLandmark() {
+AddLandmark(*) {
     global lv, landmarks, guiWindow
     guiWindow.Submit()  ; Submit the coordinates
     landmark := {x: guiWindow["LandmarkX"].Value, y: guiWindow["LandmarkY"].Value, colors: []}
@@ -60,7 +61,7 @@ AddLandmark() {
 }
 
 ; Pick a color and assign it to the selected landmark
-PickColor() {
+PickColor(*) {
     global landmarks, selectedLandmarkIndex, lv, guiWindow
     if (selectedLandmarkIndex = -1) {
         MsgBox("Please select a landmark from the list first.")
@@ -86,14 +87,14 @@ PickColor() {
 ; Handle selecting a landmark in the ListView
 lv.OnEvent("ItemClick", Func("OnLandmarkSelect"))
 
-OnLandmarkSelect() {
+OnLandmarkSelect(*) {
     global lv, selectedLandmarkIndex, guiWindow
     selectedLandmarkIndex := lv.GetNext(0) - 1  ; Get the selected landmark index
     guiWindow["StatusText"].Value := "Selected landmark #" (selectedLandmarkIndex + 1)
 }
 
 ; Start the script's main loop
-StartScript() {
+StartScript(*) {
     global running := true, guiWindow
     guiWindow["Start Script"].Disable()  ; Disable start button
     SetTimer(Func("MainLoop"), 100)  ; Set up the main loop
@@ -101,7 +102,7 @@ StartScript() {
 }
 
 ; Stop the script safely
-KillScript() {
+KillScript(*) {
     global running := false, guiWindow
     SetTimer(Func("MainLoop"), 0)  ; Turn off the loop
     guiWindow["Start Script"].Enable()  ; Enable start button
@@ -109,7 +110,7 @@ KillScript() {
 }
 
 ; Main loop that checks landmarks and handles movement
-MainLoop() {
+MainLoop(*) {
     if (!running || !landmarks.Length)
         return
     
@@ -158,3 +159,4 @@ CompareColors(color1, color2, tolerance := 15) {
     r2 := (color2 >> 16) & 0xFF, g2 := (color2 >> 8) & 0xFF, b2 := color2 & 0xFF
     return Abs(r1 - r2) <= tolerance && Abs(g1 - g2) <= tolerance && Abs(b1 - b2) <= tolerance
 }
+
