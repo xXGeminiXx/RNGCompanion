@@ -19,14 +19,22 @@ guiWindow := Gui()
 guiWindow.Add("Text", "x10 y10", "Define up to 5 Pixel Colors per Landmark (click to get colors)")
 guiWindow.Add("Edit", "x200 y40 w100 vLandmarkX", 0.5)
 guiWindow.Add("Edit", "x310 y40 w100 vLandmarkY", 0.5)
-guiWindow.Add("Button", "x420 y40 w100 h30", "Add Landmark").OnEvent("Click", Func("AddLandmark"))
-guiWindow.Add("Button", "x20 y80 w150 h30", "Pick Color").OnEvent("Click", Func("PickColor"))
-guiWindow.Add("Button", "x20 y120 w150 h30", "Start Script").OnEvent("Click", Func("StartScript"))
-guiWindow.Add("Button", "x20 y160 w150 h30", "Stop Script").OnEvent("Click", Func("KillScript"))
+
+btnAddLandmark := guiWindow.Add("Button", "x420 y40 w100 h30", "Add Landmark")
+btnPickColor := guiWindow.Add("Button", "x20 y80 w150 h30", "Pick Color")
+btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30", "Start Script")
+btnStopScript := guiWindow.Add("Button", "x20 y160 w150 h30", "Stop Script")
+
 lv := guiWindow.Add("ListView", "r5 w400 h150", "Landmark #|X|Y|Color 1|Color 2|Color 3|Color 4|Color 5")
 guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText", "Status: Ready")
 
 guiWindow.Show("w600 h300", "AHK Roblox Automation")
+
+; Bind functions to button events
+btnAddLandmark.OnEvent("Click", Func("AddLandmark"))
+btnPickColor.OnEvent("Click", Func("PickColor"))
+btnStartScript.OnEvent("Click", Func("StartScript"))
+btnStopScript.OnEvent("Click", Func("KillScript"))
 
 ; Hotkeys for starting and stopping
 Hotkey(killSwitchHotkey, Func("KillScript"))
