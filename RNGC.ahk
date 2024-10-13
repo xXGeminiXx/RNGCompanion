@@ -15,26 +15,27 @@ global lv := ""
 SetTitleMatchMode(2)  ; Match Roblox by partial title
 
 ; Initialize the GUI
-guiWindow := Gui()
-guiWindow.Add("Text", "x10 y10", "Define up to 5 Pixel Colors per Landmark (click to get colors)")
+guiWindow := Gui("Background", "Yellow")  ; Set a soft honey-yellow background for the GUI
+guiWindow.Font("s10", "Arial")  ; Set font size and type
+guiWindow.Add("Text", "x10 y10 cBlack", "🐝 Define up to 5 Pixel Colors per Landmark (click to get colors)")  ; Add a bee emoji to fit the BeeBrained theme
 guiWindow.Add("Edit", "x200 y40 w100 vLandmarkX", 0.5)
 guiWindow.Add("Edit", "x310 y40 w100 vLandmarkY", 0.5)
 
 ; Define buttons explicitly and assign them global variable names
-btnAddLandmark := guiWindow.Add("Button", "x420 y40 w100 h30", "Add Landmark")
-btnPickColor := guiWindow.Add("Button", "x20 y80 w150 h30", "Pick Color")
-btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30", "Start Script")
-btnStopScript := guiWindow.Add("Button", "x20 y160 w150 h30", "Stop Script")
+btnAddLandmark := guiWindow.Add("Button", "x420 y40 w100 h30 cYellow BackgroundBlack", "Add Landmark")
+btnPickColor := guiWindow.Add("Button", "x20 y80 w150 h30 cYellow BackgroundBlack", "Pick Color")
+btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30 cYellow BackgroundBlack", "Start Script")
+btnStopScript := guiWindow.Add("Button", "x20 y160 w150 h30 cYellow BackgroundBlack", "Stop Script")
 
-; Use an array for ListView columns
-lv := guiWindow.Add("ListView", "r5 w400 h150", ["Landmark #", "X", "Y", "Color 1", "Color 2", "Color 3", "Color 4", "Color 5"])
-lv.OnEvent("DoubleClick", OnLandmarkSelect)
+; Define status text and ensure it’s positioned properly
+guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText cBlack", "🐝 Status: Ready")  ; Add a bee icon to the status text
 
-guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText", "Status: Ready")
+; Add the ListView with proper spacing below the status
+lv := guiWindow.Add("ListView", "x20 y240 w560 h150 BackgroundYellow cBlack", ["Landmark #", "X", "Y", "Color 1", "Color 2", "Color 3", "Color 4", "Color 5"])
 
 ; Show the GUI
-guiWindow.Show("w600 h300")  ; Set window size
-guiWindow.Title := "AHK Roblox Automation"  ; Set window title
+guiWindow.Show("w600 h450")  ; Increased window height to fit all elements comfortably
+guiWindow.Title := "🐝 RNG Companion by BeeBrained"  ; Set window title with bee emoji
 
 ; Bind functions to button events (correcting Func() wrapper)
 btnAddLandmark.OnEvent("Click", AddLandmark)
