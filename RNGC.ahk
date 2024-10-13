@@ -15,9 +15,8 @@ global lv := ""
 SetTitleMatchMode(2)  ; Match Roblox by partial title
 
 ; Initialize the GUI
-guiWindow := Gui("Background", "Yellow")  ; Set a soft honey-yellow background for the GUI
-guiWindow.Font("s10", "Arial")  ; Set font size and type
-guiWindow.Add("Text", "x10 y10 cBlack", "🐝 Define up to 5 Pixel Colors per Landmark (click to get colors)")  ; Add a bee emoji to fit the BeeBrained theme
+guiWindow := Gui()
+guiWindow.Add("Text", "x10 y10 cBlack", "🐝 Define up to 5 Pixel Colors per Landmark (click to get colors)")
 guiWindow.Add("Edit", "x200 y40 w100 vLandmarkX", 0.5)
 guiWindow.Add("Edit", "x310 y40 w100 vLandmarkY", 0.5)
 
@@ -28,10 +27,11 @@ btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30 cYellow BackgroundB
 btnStopScript := guiWindow.Add("Button", "x20 y160 w150 h30 cYellow BackgroundBlack", "Stop Script")
 
 ; Define status text and ensure it’s positioned properly
-guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText cBlack", "🐝 Status: Ready")  ; Add a bee icon to the status text
+guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText cBlack", "🐝 Status: Ready")
 
-; Add the ListView with proper spacing below the status
-lv := guiWindow.Add("ListView", "x20 y240 w560 h150 BackgroundYellow cBlack", ["Landmark #", "X", "Y", "Color 1", "Color 2", "Color 3", "Color 4", "Color 5"])
+; Add the ListView with proper spacing below the status and with background color
+lv := guiWindow.Add("ListView", "x20 y240 w560 h150", ["Landmark #", "X", "Y", "Color 1", "Color 2", "Color 3", "Color 4", "Color 5"])
+lv.Opt("+BackgroundYellow")  ; Set the background for the ListView
 
 ; Show the GUI
 guiWindow.Show("w600 h450")  ; Increased window height to fit all elements comfortably
