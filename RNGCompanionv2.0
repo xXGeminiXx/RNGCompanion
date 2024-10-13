@@ -1,29 +1,38 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+#NoTrayIcon
+#MaxThreads 255
 
 ; Global variables
 global running := false
-global screenWidth := A_ScreenWidth
-global screenHeight := A_ScreenHeight
-global killSwitchHotkey := "F12"
-global startHotkey := "F10"
+global screenWidth := A_ScreenWidth ? A_ScreenWidth : 1920  ; Default to 1920 if undefined
+global screenHeight := A_ScreenHeight ? A_ScreenHeight : 1080  ; Default to 1080 if undefined
+global killSwitchHotkey := "^+X"  ; Ctrl + Shift + X to stop
+global startHotkey := "^+S"  ; Ctrl + Shift + S to start
 global currentState := "Idle"  ; Initial state
 global spinDuration := 15000  ; Spin for 15 seconds
 global clickFrequency := 200  ; Click every 200ms (5 times per second)
-global robloxWindowTitle := "Roblox"  ; Adjust to the Roblox window title
+global robloxWindowTitle := "Roblox ahk_exe RobloxPlayerBeta.exe"  ; Adjust to the Roblox window title
+global guiWindow := Gui()
+global btnStartScript := guiWindow.Add("Button", "x20 y40 w150 h30 cYellow BackgroundBlack", "Start Script")
+global btnStopScript := guiWindow.Add("Button", "x20 y80 w150 h30 cYellow BackgroundBlack", "Stop Script")
+global statusText := guiWindow.Add("Text", "x20 y120 w400 h30 cBlack", "🐝 Status: Ready")
+global lastMouseX := 0
+global lastMouseY := 0
+global lastHeartbeat := 0  ; Last heartbeat time to check script responsiveness
+global robloxHwnd := 0  ; Roblox window handle
+global LastRobloxWindow := 0
+global LastMainHeartbeat := 0
+global MacroState := 0
 
-SetTitleMatchMode(2)  ; Match Roblox by partial title
-
-; Initialize the GUI
-guiWindow := Gui()
 guiWindow.Add("Text", "x10 y10 cBlack", "🐝 RNG Macro Panel")
 
-; Define buttons explicitly and assign them to variables
-btnStartScript := guiWindow.Add("Button", "x20 y40 w150 h30 cYellow BackgroundBlack", "Start Script")
-btnStopScript := guiWindow.Add("Button", "x20 y80 w150 h30 cYellow BackgroundBlack", "Stop Script")
+SetTitleMatchMode(2)  ; Match Roblox by partial title
+DetectHiddenWindows(true) ; Ensure we can detect hidden windows
 
-; Define status text
-statusText := guiWindow.Add("Text", "x20 y120 w400 h30 cBlack", "🐝 Status: Ready")
+; Set coordinate mode
+CoordMode("Mouse", "Screen") ; Coordinates are relative to the screen
+CoordMode("Pixel", "Screen") ; Coordinates for pixel-related operations are also relative to the screen
 
 ; Show the GUI
 guiWindow.Show("w400 h200")  ; Set window size
@@ -34,32 +43,48 @@ btnStartScript.OnEvent("Click", StartScript)
 btnStopScript.OnEvent("Click", KillScript)
 
 ; Set up hotkeys
-Hotkey(killSwitchHotkey, KillScript)
-Hotkey(startHotkey, StartScript)
+Hotkey(killSwitchHotkey, KillScript)  ; Ctrl+Shift+X to stop
+Hotkey(startHotkey, StartScript)  ; Ctrl+Shift+S to start
+
+; Use SendEvent mode for compatibility with Roblox
+SendMode("Event")
 
 ; Start the script with a 5-second delay and initial center click in Roblox
 StartScript(*) {
-    global running, currentState, statusText, btnStartScript, btnStopScript, screenWidth, screenHeight, robloxWindowTitle
-    if WinActive(robloxWindowTitle) {
+    global running, currentState, statusText, btnStartScript, btnStopScript, screenWidth, screenHeight, robloxWindowTitle, lastMouseX, lastMouseY, lastHeartbeat, robloxHwnd, LastMainHeartbeat, MacroState
+    robloxHwnd := WinExist(robloxWindowTitle)
+    if robloxHwnd {
         running := true
         btnStartScript.Enabled := false  ; Disable start button
         btnStopScript.Enabled := true  ; Enable stop button
-        
+
         ; Delay 5 seconds before starting
         statusText.Value := "Waiting 5 seconds before starting..."
         Sleep(5000)
-        
+
         ; Activate Roblox window and click in the center
         statusText.Value := "Activating Roblox window and clicking in the center..."
         if WinExist(robloxWindowTitle) {
             WinActivate(robloxWindowTitle)  ; Activate the Roblox window
-            Click(screenWidth * 0.5, screenHeight * 0.5)  ; Click in the center of the screen
+            Sleep(500) ; Wait for the window to activate
+            MouseMove(screenWidth * 0.5, screenHeight * 0.5, 10)
+            Sleep(200)
+            Click("left down")
+            Sleep(50)
+            Click("left up")
+            Sleep(200) ; Pause to simulate a human-like delay
         }
-        
+
+        ; Save the last mouse position
+        MouseGetPos(&lastMouseX, &lastMouseY)
+        lastHeartbeat := A_TickCount  ; Record the last heartbeat time
+        LastMainHeartbeat := A_TickCount  ; Record the main heartbeat time
+
         ; Transition to the next state
         currentState := "RightClickDrag"
         SetTimer(MainLoop, 100)  ; Start the main loop
-        statusText.Value := "Script started! Press F12 to stop."
+        statusText.Value := "Script started! Press Ctrl+Shift+X to stop."
+        MacroState := 2  ; Set macro state to active
     } else {
         MsgBox("Roblox window is not active. Please make sure it's active and try again.")
     }
@@ -67,22 +92,37 @@ StartScript(*) {
 
 ; Stop the script safely
 KillScript(*) {
-    global running, currentState, statusText, btnStartScript, btnStopScript
+    global running, currentState, statusText, btnStartScript, btnStopScript, lastMouseX, lastMouseY, MacroState
     running := false
     SetTimer(MainLoop, 0)  ; Stop the loop
     btnStartScript.Enabled := true  ; Enable start button
     btnStopScript.Enabled := false  ; Disable stop button
     currentState := "Idle"
     statusText.Value := "Script stopped."
+    MacroState := 0  ; Set macro state to inactive
+
+    ; Restore the last mouse position
+    MouseMove(lastMouseX, lastMouseY, 10)
 }
 
 ; Main loop controlling game states
 MainLoop(*) {
-    global running, currentState, screenWidth, screenHeight, robloxWindowTitle
-    if (!running || !WinActive(robloxWindowTitle)) {
+    global running, currentState, screenWidth, screenHeight, robloxWindowTitle, lastHeartbeat, robloxHwnd, LastMainHeartbeat, LastRobloxWindow, MacroState
+    robloxHwnd := WinExist(robloxWindowTitle)
+    currentTime := A_TickCount
+
+    if (!running || !robloxHwnd) {
         KillScript()  ; Immediately stop if Roblox window is not active
         return
     }
+
+    ; Heartbeat check to ensure script is running properly
+    if ((currentTime - LastMainHeartbeat > 120000) || (currentTime - lastHeartbeat > 60000)) {  ; Timeout conditions
+        KillScript()  ; Stop script if no heartbeat detected
+        MsgBox("Script stopped due to inactivity or timeout.")
+        return
+    }
+    LastMainHeartbeat := currentTime  ; Update main heartbeat
 
     ; Handle each game state with separate functions
     if (currentState = "RightClickDrag") {
@@ -94,51 +134,87 @@ MainLoop(*) {
 
 ; State: Right-click drag to adjust camera horizontally
 RightClickDrag() {
-    global currentState, screenWidth, screenHeight, statusText, robloxWindowTitle
+    global currentState, screenWidth, screenHeight, statusText, robloxWindowTitle, clickFrequency, robloxHwnd, LastRobloxWindow
     statusText.Value := "Bot action: Right-click dragging"
 
     ; Ensure actions are performed in the Roblox window
-    if WinExist(robloxWindowTitle) {
+    if robloxHwnd {
         WinActivate(robloxWindowTitle)  ; Activate the Roblox window
-        ; Simulate right mouse button down
-        Click("Right Down")
-        MouseMove(screenWidth * 0.5, screenHeight * 0.25, 0)
-        MouseMove(screenWidth * 0.5, screenHeight * 0.75, 50)
+        Sleep(500) ; Wait for the window to activate
+
+        ; Move mouse to starting position
+        MouseMove(screenWidth * 0.5, screenHeight * 0.25, 10)
+        Sleep(200)
+
+        ; Send initial left-click before right-click drag
+        Click("left down")
+        Sleep(50)
+        Click("left up")
+        Sleep(200)
+
+        ; Simulate right mouse button down and spin to the right
+        Click("right down")
+        MouseMove(screenWidth * 0.75, screenHeight * 0.25, 20)
+        Sleep(500)
+
+        ; Send periodic left-clicks during the drag
+        startTime := A_TickCount
+        while (A_TickCount - startTime < 2000) {  ; Drag for 2 seconds
+            Click("left down")
+            Sleep(50)
+            Click("left up")
+            Sleep(clickFrequency)
+        }
+
         ; Simulate right mouse button up
-        Click("Right Up")
-        Sleep(1000)  ; Give some time for the camera to adjust
+        Click("right up")
+        Sleep(200)
+
+        ; Move mouse back to starting position
+        MouseMove(screenWidth * 0.5, screenHeight * 0.25, 20)
+        Sleep(200)
+
+        ; Move again to simulate circling around the player
+        MouseMove(screenWidth * 0.25, screenHeight * 0.25, 20)
+        Sleep(500)
+
+        ; Update heartbeat for Roblox window
+        LastRobloxWindow := A_TickCount
     }
 
     ; Transition to the next state: Spin and click
     currentState := "SpinAndClick"
 }
 
-; State: Spin the camera and left-click periodically
+; State: Spin the camera and send inputs periodically
 SpinAndClick() {
-    global spinDuration, clickFrequency, currentState, screenWidth, screenHeight, statusText, robloxWindowTitle
+    global spinDuration, clickFrequency, currentState, screenWidth, screenHeight, statusText, robloxWindowTitle, robloxHwnd, LastRobloxWindow
     statusText.Value := "Bot action: Spinning and clicking"
 
     startTime := A_TickCount
     while (A_TickCount - startTime < spinDuration) {
-        if !WinActive(robloxWindowTitle) {
-            KillScript()  ; Stop immediately if Roblox window is lost during spin
+        robloxHwnd := WinExist(robloxWindowTitle)
+        if (!robloxHwnd) {
+            KillScript()  ; Immediately stop if Roblox window is not active
             return
         }
-        ; Ensure actions are performed in the Roblox window
-        if WinExist(robloxWindowTitle) {
-            WinActivate(robloxWindowTitle)  ; Activate the Roblox window
-            ; Simulate right mouse button down
-            Click("Right Down")
-            MouseMove(screenWidth * 0.5, screenHeight * 0.5, 0)
-            MouseMove(screenWidth * 0.75, screenHeight * 0.5, 50)
-            ; Simulate right mouse button up
-            Click("Right Up")
-            ; Left-click periodically
-            Click("Left")
-            Sleep(clickFrequency)
-        }
+
+        ; Simulate spinning the camera by moving the mouse
+        MouseMove(screenWidth * 0.5, screenHeight * 0.5, 10)  ; Move mouse to center
+        Sleep(200)
+        MouseMove(screenWidth * 0.75, screenHeight * 0.5, 10)  ; Spin to the right
+        Sleep(200)
+        MouseMove(screenWidth * 0.25, screenHeight * 0.5, 10)  ; Spin to the left
+        Sleep(200)
+
+        ; Periodic left-clicks while spinning
+        Click("left down")
+        Sleep(50)
+        Click("left up")
+        Sleep(clickFrequency)
     }
 
-    ; After spinning and clicking, return to idle or repeat
-    currentState := "RightClickDrag"  ; Loop back to the first state
+    ; Transition back to RightClickDrag state after spinning
+    currentState := "RightClickDrag"
+    LastRobloxWindow := A_TickCount  ; Update last active time for the Roblox window
 }
