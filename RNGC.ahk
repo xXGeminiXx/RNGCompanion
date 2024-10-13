@@ -1,18 +1,18 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+
+; Set up all global variables with initial values
 global running := false
-SetTitleMatchMode(2)  ; Match Roblox by partial title
-
-; Define landmarks (you can add pixel color definitions via the GUI)
-landmarks := []
-
 global screenWidth := A_ScreenWidth
 global screenHeight := A_ScreenHeight
 global selectedLandmarkIndex := -1
+global landmarks := []
+global killSwitchHotkey := "F12"
+global startHotkey := "F10"
+global guiWindow := ""
+global lv := ""
 
-; Define hotkeys for starting and stopping the script
-killSwitchHotkey := "F12"
-startHotkey := "F10"
+SetTitleMatchMode(2)  ; Match Roblox by partial title
 
 ; Initialize the GUI
 guiWindow := Gui()
@@ -20,7 +20,7 @@ guiWindow.Add("Text", "x10 y10", "Define up to 5 Pixel Colors per Landmark (clic
 guiWindow.Add("Edit", "x200 y40 w100 vLandmarkX", 0.5)
 guiWindow.Add("Edit", "x310 y40 w100 vLandmarkY", 0.5)
 
-; Define buttons explicitly
+; Define buttons explicitly and assign them global variable names
 btnAddLandmark := guiWindow.Add("Button", "x420 y40 w100 h30", "Add Landmark")
 btnPickColor := guiWindow.Add("Button", "x20 y80 w150 h30", "Pick Color")
 btnStartScript := guiWindow.Add("Button", "x20 y120 w150 h30", "Start Script")
@@ -28,21 +28,23 @@ btnStopScript := guiWindow.Add("Button", "x20 y160 w150 h30", "Stop Script")
 
 ; Use an array for ListView columns
 lv := guiWindow.Add("ListView", "r5 w400 h150", ["Landmark #", "X", "Y", "Color 1", "Color 2", "Color 3", "Color 4", "Color 5"])
+lv.OnEvent("DoubleClick", OnLandmarkSelect)
+
 guiWindow.Add("Text", "x20 y200 w400 h30 vStatusText", "Status: Ready")
 
 ; Show the GUI
 guiWindow.Show("w600 h300")  ; Set window size
 guiWindow.Title := "AHK Roblox Automation"  ; Set window title
 
-; Bind functions to button events (make sure they are bound after creating buttons)
-btnAddLandmark.OnEvent("Click", Func("AddLandmark"))
-btnPickColor.OnEvent("Click", Func("PickColor"))
-btnStartScript.OnEvent("Click", Func("StartScript"))
-btnStopScript.OnEvent("Click", Func("KillScript"))
+; Bind functions to button events (correcting Func() wrapper)
+btnAddLandmark.OnEvent("Click", AddLandmark)
+btnPickColor.OnEvent("Click", PickColor)
+btnStartScript.OnEvent("Click", StartScript)
+btnStopScript.OnEvent("Click", KillScript)
 
 ; Set up hotkeys
-Hotkey("F12", Func("KillScript"))
-Hotkey("F10", Func("StartScript"))
+Hotkey("F12", KillScript)
+Hotkey("F10", StartScript)
 
 ; Add a new landmark
 AddLandmark(*) {
@@ -85,39 +87,42 @@ PickColor(*) {
     guiWindow["StatusText"].Value := "Picked color: " color " at X: " xPos " Y: " yPos
 }
 
-; Handle selecting a landmark in the ListView
-lv.OnEvent("ItemClick", Func("OnLandmarkSelect"))
-
+; Handle selecting a landmark in the ListView (on double click)
 OnLandmarkSelect(*) {
     global lv, selectedLandmarkIndex, guiWindow
     selectedLandmarkIndex := lv.GetNext(0) - 1  ; Get the selected landmark index
-    guiWindow["StatusText"].Value := "Selected landmark #" (selectedLandmarkIndex + 1)
+    if (selectedLandmarkIndex >= 0) {
+        guiWindow["StatusText"].Value := "Selected landmark #" (selectedLandmarkIndex + 1)
+    } else {
+        guiWindow["StatusText"].Value := "No landmark selected."
+    }
 }
 
 ; Start the script's main loop
 StartScript(*) {
     global running := true, guiWindow
     guiWindow["Start Script"].Disable()  ; Disable start button
-    SetTimer(Func("MainLoop"), 100)  ; Set up the main loop
+    SetTimer(MainLoop, 100)  ; Set up the main loop
     guiWindow["StatusText"].Value := "Script started! Press F12 to stop."
 }
 
 ; Stop the script safely
 KillScript(*) {
     global running := false, guiWindow
-    SetTimer(Func("MainLoop"), 0)  ; Turn off the loop
+    SetTimer(MainLoop, 0)  ; Turn off the loop
     guiWindow["Start Script"].Enable()  ; Enable start button
     guiWindow["StatusText"].Value := "Script stopped."
 }
 
 ; Main loop that checks landmarks and handles movement
 MainLoop(*) {
+    global running, screenWidth, screenHeight, landmarks
     if (!running || !landmarks.Length)
         return
     
     ; Refresh screen resolution
-    global screenWidth := A_ScreenWidth
-    global screenHeight := A_ScreenHeight
+    screenWidth := A_ScreenWidth
+    screenHeight := A_ScreenHeight
 
     positionConfirmed := true
 
