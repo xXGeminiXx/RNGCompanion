@@ -16,7 +16,7 @@ SetTitleMatchMode(2)  ; Match Roblox by partial title
 
 ; Initialize the GUI
 guiWindow := Gui()
-guiWindow.Add("Text", "x10 y10 cBlack", "🐝 Bot Control Panel")
+guiWindow.Add("Text", "x10 y10 cBlack", "🐝 RNG Macro Panel")
 
 ; Define buttons explicitly and assign them to variables
 btnStartScript := guiWindow.Add("Button", "x20 y40 w150 h30 cYellow BackgroundBlack", "Start Script")
@@ -65,7 +65,7 @@ KillScript(*) {
 
 ; Main loop controlling game states
 MainLoop(*) {
-    global running, currentState, screenWidth, screenHeight
+    global running, currentState, screenWidth, screenHeight, robloxWindowTitle
     if (!running || !WinActive(robloxWindowTitle)) {
         KillScript()  ; Immediately stop if Roblox window is not active
         return
@@ -81,20 +81,27 @@ MainLoop(*) {
 
 ; State: Right-click drag to adjust camera horizontally
 RightClickDrag() {
-    global currentState, screenWidth, screenHeight, statusText
+    global currentState, screenWidth, screenHeight, statusText, robloxWindowTitle
     statusText.Value := "Bot action: Right-click dragging"
-    
-    ; Drag the mouse to set the camera horizontal
-    MouseClickDrag("Right", screenWidth * 0.5, screenHeight * 0.25, screenWidth * 0.5, screenHeight * 0.75, 50)
-    Sleep(1000)  ; Give some time for the camera to adjust
-    
+
+    ; Ensure actions are performed in the Roblox window
+    if WinExist(robloxWindowTitle) {
+        WinActivate  ; Activate the Roblox window
+        ; Drag the mouse to set the camera horizontal
+        ControlClick,, % robloxWindowTitle,, Right D
+        MouseMove(screenWidth * 0.5, screenHeight * 0.25, 0)
+        MouseMove(screenWidth * 0.5, screenHeight * 0.75, 50)
+        ControlClick,, % robloxWindowTitle,, Right U
+        Sleep(1000)  ; Give some time for the camera to adjust
+    }
+
     ; Transition to the next state: Spin and click
     currentState := "SpinAndClick"
 }
 
 ; State: Spin the camera and left-click periodically
 SpinAndClick() {
-    global spinDuration, clickFrequency, currentState, screenWidth, screenHeight, statusText
+    global spinDuration, clickFrequency, currentState, screenWidth, screenHeight, statusText, robloxWindowTitle
     statusText.Value := "Bot action: Spinning and clicking"
 
     startTime := A_TickCount
@@ -103,14 +110,19 @@ SpinAndClick() {
             KillScript()  ; Stop immediately if Roblox window is lost during spin
             return
         }
-        ; Hold right-click and move the mouse in a circle
-        MouseClickDrag("Right", screenWidth * 0.5, screenHeight * 0.5, screenWidth * 0.75, screenHeight * 0.5, 50)
-        ; Left-click periodically
-        Click("Left")
-        Sleep(clickFrequency)
+        ; Ensure actions are performed in the Roblox window
+        if WinExist(robloxWindowTitle) {
+            WinActivate  ; Activate the Roblox window
+            ControlClick,, % robloxWindowTitle,, Right D
+            MouseMove(screenWidth * 0.5, screenHeight * 0.5, 0)
+            MouseMove(screenWidth * 0.75, screenHeight * 0.5, 50)
+            ControlClick,, % robloxWindowTitle,, Right U
+            ; Left-click periodically
+            ControlClick,, % robloxWindowTitle,, Left
+            Sleep(clickFrequency)
+        }
     }
-    
+
     ; After spinning and clicking, return to idle or repeat
     currentState := "RightClickDrag"  ; Loop back to the first state
 }
-
