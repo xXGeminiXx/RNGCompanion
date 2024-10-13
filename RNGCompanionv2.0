@@ -37,14 +37,27 @@ btnStopScript.OnEvent("Click", KillScript)
 Hotkey(killSwitchHotkey, KillScript)
 Hotkey(startHotkey, StartScript)
 
-; Start the script
+; Start the script with a 5-second delay and initial center click in Roblox
 StartScript(*) {
-    global running, currentState, statusText, btnStartScript, btnStopScript
+    global running, currentState, statusText, btnStartScript, btnStopScript, screenWidth, screenHeight, robloxWindowTitle
     if WinActive(robloxWindowTitle) {
         running := true
-        currentState := "RightClickDrag"
         btnStartScript.Enabled := false  ; Disable start button
         btnStopScript.Enabled := true  ; Enable stop button
+        
+        ; Delay 5 seconds before starting
+        statusText.Value := "Waiting 5 seconds before starting..."
+        Sleep(5000)
+        
+        ; Activate Roblox window and click in the center
+        statusText.Value := "Activating Roblox window and clicking in the center..."
+        if WinExist(robloxWindowTitle) {
+            WinActivate(robloxWindowTitle)  ; Activate the Roblox window
+            Click(screenWidth * 0.5, screenHeight * 0.5)  ; Click in the center of the screen
+        }
+        
+        ; Transition to the next state
+        currentState := "RightClickDrag"
         SetTimer(MainLoop, 100)  ; Start the main loop
         statusText.Value := "Script started! Press F12 to stop."
     } else {
@@ -86,12 +99,13 @@ RightClickDrag() {
 
     ; Ensure actions are performed in the Roblox window
     if WinExist(robloxWindowTitle) {
-        WinActivate  ; Activate the Roblox window
-        ; Drag the mouse to set the camera horizontal
-        ControlClick,, % robloxWindowTitle,, Right D
+        WinActivate(robloxWindowTitle)  ; Activate the Roblox window
+        ; Simulate right mouse button down
+        Click("Right Down")
         MouseMove(screenWidth * 0.5, screenHeight * 0.25, 0)
         MouseMove(screenWidth * 0.5, screenHeight * 0.75, 50)
-        ControlClick,, % robloxWindowTitle,, Right U
+        ; Simulate right mouse button up
+        Click("Right Up")
         Sleep(1000)  ; Give some time for the camera to adjust
     }
 
@@ -112,13 +126,15 @@ SpinAndClick() {
         }
         ; Ensure actions are performed in the Roblox window
         if WinExist(robloxWindowTitle) {
-            WinActivate  ; Activate the Roblox window
-            ControlClick,, % robloxWindowTitle,, Right D
+            WinActivate(robloxWindowTitle)  ; Activate the Roblox window
+            ; Simulate right mouse button down
+            Click("Right Down")
             MouseMove(screenWidth * 0.5, screenHeight * 0.5, 0)
             MouseMove(screenWidth * 0.75, screenHeight * 0.5, 50)
-            ControlClick,, % robloxWindowTitle,, Right U
+            ; Simulate right mouse button up
+            Click("Right Up")
             ; Left-click periodically
-            ControlClick,, % robloxWindowTitle,, Left
+            Click("Left")
             Sleep(clickFrequency)
         }
     }
