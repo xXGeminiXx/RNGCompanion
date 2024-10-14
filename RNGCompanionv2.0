@@ -11,12 +11,12 @@ global killSwitchHotkey := "^+X"  ; Ctrl + Shift + X to stop
 global startHotkey := "^+S"  ; Ctrl + Shift + S to start
 global currentState := "Idle"  ; Initial state
 global spinDuration := 15000  ; Spin for 15 seconds
-global clickFrequency := 200  ; Click every 200ms (5 times per second)
+global clickFrequency := 400  ; Click every 400ms (2.5 times per second)
 global robloxWindowTitle := "Roblox ahk_exe RobloxPlayerBeta.exe"  ; Adjust to the Roblox window title
 global guiWindow := Gui()
-global btnStartScript := guiWindow.Add("Button", "x20 y40 w150 h30 cYellow BackgroundBlack", "Start Script")
-global btnStopScript := guiWindow.Add("Button", "x20 y80 w150 h30 cYellow BackgroundBlack", "Stop Script")
-global statusText := guiWindow.Add("Text", "x20 y120 w400 h30 cBlack", "🐝 Status: Ready")
+global btnStartScript := guiWindow.Add("Button", "x20 y90 w150 h30 cYellow BackgroundBlack", "Start Script")
+global btnStopScript := guiWindow.Add("Button", "x220 y90 w150 h30 cYellow BackgroundBlack", "Stop Script")
+global statusText := guiWindow.Add("Text", "x20 y140 w360 h30 cBlack", "🐝 Status: Ready")
 global lastMouseX := 0
 global lastMouseY := 0
 global lastHeartbeat := 0  ; Last heartbeat time to check script responsiveness
@@ -27,7 +27,7 @@ global MacroState := 0
 global windowPosX := 0
 global windowPosY := 0
 
-guiWindow.Add("Text", "x10 y10 w380 h60 cRed BackgroundYellow", "WARNING: This macro controls the mouse and keyboard, moves the camera, and spams clicks to help you farm breakables. Press Ctrl + Shift + X to stop at any time.")
+guiWindow.Add("Text", "x10 y10 w380 h60 cRed BackgroundYellow Center", "WARNING: This macro controls the mouse and keyboard, moves the camera, and spams clicks to help you farm breakables. Press Ctrl + Shift + X to stop at any time.")
 
 SetTitleMatchMode(2)  ; Match Roblox by partial title
 DetectHiddenWindows(true) ; Ensure we can detect hidden windows
@@ -90,7 +90,7 @@ StartScript(*) {
 
         ; Transition to the next state
         currentState := "RightClickDrag"
-        SetTimer(MainLoop, 50)  ; Start the main loop with more frequent checks
+        SetTimer(MainLoop, 20)  ; Start the main loop with more frequent checks
         statusText.Value := "Script started! Press Ctrl+Shift+X to stop."
         MacroState := 2  ; Set macro state to active
     } else {
@@ -152,7 +152,7 @@ RightClickDrag() {
 
         ; Move mouse to starting position
         MouseMove(screenWidth * 0.5, screenHeight * 0.25, 10)
-        Sleep(200)
+        Sleep(400)
 
         ; Start right-click drag
         Click("right down")
@@ -160,12 +160,12 @@ RightClickDrag() {
         ; Simulate dragging across the screen horizontally
         ; Adjust the speed by controlling the sleep time and mouse speed
         startTime := A_TickCount
-        while (A_TickCount - startTime < 4000) {  ; Drag for 4 seconds (increased duration for slower drag)
+        while (A_TickCount - startTime < 8000) {  ; Drag for 8 seconds (increased duration for slower drag)
             ; Move mouse horizontally while dragging
             MouseMove(screenWidth * 0.75, screenHeight * 0.25, 20)  ; Move to the right
-            Sleep(200)  ; Pause for a short period
+            Sleep(400)  ; Pause for a short period
             MouseMove(screenWidth * 0.25, screenHeight * 0.25, 20)  ; Move to the left
-            Sleep(200)  ; Pause for a short period
+            Sleep(400)  ; Pause for a short period
 
             ; Spam left-click while dragging
             Click("left down")
@@ -176,15 +176,15 @@ RightClickDrag() {
 
         ; Release right mouse button
         Click("right up")
-        Sleep(200)
+        Sleep(400)
 
         ; Move mouse back to starting position
         MouseMove(screenWidth * 0.5, screenHeight * 0.25, 20)
-        Sleep(200)
+        Sleep(400)
 
         ; Move again to simulate circling around the player
         MouseMove(screenWidth * 0.25, screenHeight * 0.25, 20)
-        Sleep(500)
+        Sleep(1000)
 
         ; Update heartbeat for Roblox window
         LastRobloxWindow := A_TickCount
@@ -209,11 +209,11 @@ SpinAndClick() {
 
         ; Simulate spinning the camera by moving the mouse
         MouseMove(screenWidth * 0.5, screenHeight * 0.5, 10)  ; Move mouse to center
-        Sleep(400)  ; Slow down the spin
+        Sleep(800)  ; Slow down the spin
         MouseMove(screenWidth * 0.75, screenHeight * 0.5, 10)  ; Spin to the right
-        Sleep(400)  ; Slow down the spin
+        Sleep(800)  ; Slow down the spin
         MouseMove(screenWidth * 0.25, screenHeight * 0.5, 10)  ; Spin to the left
-        Sleep(400)  ; Slow down the spin
+        Sleep(800)  ; Slow down the spin
 
         ; Periodic left-clicks while spinning
         Click("left down")
