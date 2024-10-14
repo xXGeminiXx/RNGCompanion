@@ -132,7 +132,6 @@ MainLoop(*) {
     }
 }
 
-; State: Right-click drag to adjust camera horizontally
 RightClickDrag() {
     global currentState, screenWidth, screenHeight, statusText, robloxWindowTitle, clickFrequency, robloxHwnd, LastRobloxWindow
     statusText.Value := "Bot action: Right-click dragging"
@@ -146,27 +145,27 @@ RightClickDrag() {
         MouseMove(screenWidth * 0.5, screenHeight * 0.25, 10)
         Sleep(200)
 
-        ; Send initial left-click before right-click drag
-        Click("left down")
-        Sleep(50)
-        Click("left up")
-        Sleep(200)
-
-        ; Simulate right mouse button down and spin to the right
+        ; Start right-click drag
         Click("right down")
-        MouseMove(screenWidth * 0.75, screenHeight * 0.25, 20)
-        Sleep(500)
-
-        ; Send periodic left-clicks during the drag
+        
+        ; Simulate dragging across the screen horizontally
+        ; Adjust the speed by controlling the sleep time and mouse speed
         startTime := A_TickCount
         while (A_TickCount - startTime < 2000) {  ; Drag for 2 seconds
+            ; Move mouse horizontally while dragging
+            MouseMove(screenWidth * 0.75, screenHeight * 0.25, 20)  ; Move to the right
+            Sleep(100)  ; Pause for a short period
+            MouseMove(screenWidth * 0.25, screenHeight * 0.25, 20)  ; Move to the left
+            Sleep(100)  ; Pause for a short period
+
+            ; Spam left-click while dragging
             Click("left down")
             Sleep(50)
             Click("left up")
-            Sleep(clickFrequency)
+            Sleep(clickFrequency)  ; Control the frequency of left clicks
         }
 
-        ; Simulate right mouse button up
+        ; Release right mouse button
         Click("right up")
         Sleep(200)
 
@@ -185,6 +184,7 @@ RightClickDrag() {
     ; Transition to the next state: Spin and click
     currentState := "SpinAndClick"
 }
+
 
 ; State: Spin the camera and send inputs periodically
 SpinAndClick() {
