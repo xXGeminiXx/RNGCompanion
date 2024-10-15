@@ -12,11 +12,13 @@ global startHotkey := "^+S"  ; Ctrl + Shift + S to start
 global currentState := "Idle"  ; Initial state
 global spinDuration := 15000  ; Spin for 15 seconds
 global clickFrequency := 400  ; Click every 400ms (2.5 times per second)
+global spinSpeed := 4000  ; Adjustable speed for spinning actions
+
 global robloxWindowTitle := "Roblox ahk_exe RobloxPlayerBeta.exe"  ; Adjust to the Roblox window title
 global guiWindow := Gui()
-global btnStartScript := guiWindow.Add("Button", "x20 y90 w150 h30 cYellow BackgroundBlack", "Start Script")
-global btnStopScript := guiWindow.Add("Button", "x220 y90 w150 h30 cYellow BackgroundBlack", "Stop Script")
-global statusText := guiWindow.Add("Text", "x20 y140 w360 h30 cBlack", "🐝 Status: Ready")
+global btnStartScript := guiWindow.Add("Button", "x20 y200 w150 h30 cYellow BackgroundBlack", "Start Script")
+global btnStopScript := guiWindow.Add("Button", "x220 y200 w150 h30 cYellow BackgroundBlack", "Stop Script")
+global statusText := guiWindow.Add("Text", "x20 y250 w360 h30 cBlack", "🐝 Status: Ready")
 global lastMouseX := 0
 global lastMouseY := 0
 global lastHeartbeat := 0  ; Last heartbeat time to check script responsiveness
@@ -27,7 +29,7 @@ global MacroState := 0
 global windowPosX := 0
 global windowPosY := 0
 
-guiWindow.Add("Text", "x10 y10 w380 h60 cRed BackgroundYellow Center", "WARNING: This macro controls the mouse and keyboard, moves the camera, and spams clicks to help you farm breakables. Press Ctrl + Shift + X to stop at any time.")
+guiWindow.Add("Text", "x10 y10 w380 h100 cRed BackgroundYellow Center", "WARNING: This macro controls the mouse and keyboard, moves the camera, and spams clicks to help you farm breakables. Press Ctrl + Shift + X to stop at any time.")
 
 SetTitleMatchMode(2)  ; Match Roblox by partial title
 DetectHiddenWindows(true) ; Ensure we can detect hidden windows
@@ -37,7 +39,7 @@ CoordMode("Mouse", "Screen") ; Coordinates are relative to the screen
 CoordMode("Pixel", "Screen") ; Coordinates for pixel-related operations are also relative to the screen
 
 ; Show the GUI
-guiWindow.Show("w400 h260")  ; Set window size
+guiWindow.Show("w400 h350")  ; Set window size
 guiWindow.Title := "🐝 Roblox AutoScript by BeeBrained"
 
 ; Restore previous window position
@@ -111,6 +113,9 @@ KillScript(*) {
 
     ; Restore the last mouse position
     MouseMove(lastMouseX, lastMouseY, 10)
+
+    ; Close any running instance of the script
+    ExitApp
 }
 
 ; Main loop controlling game states
@@ -156,23 +161,13 @@ RightClickDrag() {
 
         ; Start right-click drag
         Click("right down")
-        
-        ; Simulate dragging across the screen horizontally
-        ; Adjust the speed by controlling the sleep time and mouse speed
-        startTime := A_TickCount
-        while (A_TickCount - startTime < 8000) {  ; Drag for 8 seconds (increased duration for slower drag)
-            ; Move mouse horizontally while dragging
-            MouseMove(screenWidth * 0.75, screenHeight * 0.25, 20)  ; Move to the right
-            Sleep(400)  ; Pause for a short period
-            MouseMove(screenWidth * 0.25, screenHeight * 0.25, 20)  ; Move to the left
-            Sleep(400)  ; Pause for a short period
+        Sleep(200)  ; Hold the right mouse button for a bit
 
-            ; Spam left-click while dragging
-            Click("left down")
-            Sleep(50)
-            Click("left up")
-            Sleep(clickFrequency)  ; Control the frequency of left clicks
-        }
+        ; Drag the mouse horizontally to simulate camera movement
+        MouseMove(screenWidth * 0.75, screenHeight * 0.25, 50)
+        Sleep(500)  ; Wait while dragging
+        MouseMove(screenWidth * 0.25, screenHeight * 0.25, 50)
+        Sleep(500)  ; Wait while dragging
 
         ; Release right mouse button
         Click("right up")
@@ -181,10 +176,6 @@ RightClickDrag() {
         ; Move mouse back to starting position
         MouseMove(screenWidth * 0.5, screenHeight * 0.25, 20)
         Sleep(400)
-
-        ; Move again to simulate circling around the player
-        MouseMove(screenWidth * 0.25, screenHeight * 0.25, 20)
-        Sleep(1000)
 
         ; Update heartbeat for Roblox window
         LastRobloxWindow := A_TickCount
@@ -196,7 +187,7 @@ RightClickDrag() {
 
 ; State: Spin the camera and send inputs periodically
 SpinAndClick() {
-    global spinDuration, clickFrequency, currentState, screenWidth, screenHeight, statusText, robloxWindowTitle, robloxHwnd, LastRobloxWindow
+    global spinDuration, clickFrequency, spinSpeed, currentState, screenWidth, screenHeight, statusText, robloxWindowTitle, robloxHwnd, LastRobloxWindow
     statusText.Value := "Bot action: Spinning and clicking"
 
     startTime := A_TickCount
@@ -209,11 +200,11 @@ SpinAndClick() {
 
         ; Simulate spinning the camera by moving the mouse
         MouseMove(screenWidth * 0.5, screenHeight * 0.5, 10)  ; Move mouse to center
-        Sleep(800)  ; Slow down the spin
+        Sleep(spinSpeed)  ; Slow down the spin
         MouseMove(screenWidth * 0.75, screenHeight * 0.5, 10)  ; Spin to the right
-        Sleep(800)  ; Slow down the spin
+        Sleep(spinSpeed)  ; Slow down the spin
         MouseMove(screenWidth * 0.25, screenHeight * 0.5, 10)  ; Spin to the left
-        Sleep(800)  ; Slow down the spin
+        Sleep(spinSpeed)  ; Slow down the spin
 
         ; Periodic left-clicks while spinning
         Click("left down")
@@ -230,5 +221,37 @@ SpinAndClick() {
 ; Save window position before closing
 SaveWindowPosition(*) {
     global guiWindow, windowPosX, windowPosY
-    guiWindow.Pos(&windowPosX, &windowPosY)
+    guiWindow.GetPos(&windowPosX, &windowPosY)
+    ExitApp
+}
+
+; Walk function to simulate adaptive movement
+WalkSmooth(n) {
+    global robloxHwnd
+    if robloxHwnd {
+        steps := n * 10  ; Number of small steps to take
+        stepDuration := 100  ; Duration for each step (ms)
+        loop steps {
+            MouseMoveAdd(2, 0)  ; Move mouse incrementally
+            Sleep(stepDuration / steps)
+        }
+    }
+}
+
+; Function to move mouse incrementally
+MouseMoveAdd(deltaX, deltaY) {
+    MouseGetPos(&x, &y)
+    MouseMove(x + deltaX, y + deltaY, 0)
+}
+
+; Get the Roblox window handle
+GetRobloxHWND() {
+    if (hwnd := WinExist("Roblox ahk_exe RobloxPlayerBeta.exe"))
+        return hwnd
+    else if (WinExist("Roblox ahk_exe ApplicationFrameHost.exe")) {
+        ControlGetHwnd(&hwnd, "", "ApplicationFrameInputSinkWindow1")
+        return hwnd
+    }
+    else
+        return 0
 }
